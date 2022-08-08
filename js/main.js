@@ -181,6 +181,14 @@ function addClassToElement(element, value) {
 	element.classList.add(valueT)
 }
 
+function removeClassFromElement(element, value) {
+    const valueT = value.trim();
+	if (!valueT) {
+		return;
+	}
+	element.classList.remove(valueT)
+}
+
 function addAttributesToElement(element, attributes) {
 	if (!attributes) {
 		return;
@@ -212,24 +220,37 @@ function createText(tag, text, attributes, parent) {
 	return finalizeElement(element, attributes, parent);
 }
 
-function createOrderedList(name, attributes, parent) {
-    const list = document.createElement("ol");
-
-    localisationData["key-list-" + name].forEach(v => {
-        createText("li", v[getSelectedLanguage()], {"class": "list-item"}, list);
-    });
-
-    return finalizeElement(list, attributes, parent);
-}
-
-function createIngredientList(name) {
-    const elements = document.getElementsByClassName("container-" + name);
-    if (!elements || elements.length < 1) {
+function createIngredientList(name, numColumns) {
+    const header = document.getElementById("table-" + name + "-header");
+    if (!header) {
+        console.error("Header not found for table " + name);
         return;
     }
 
-    createText("h3", localisationData["key-title-" + name][getSelectedLanguage()], {"class": "text-center"}, elements[0]);
-    createOrderedList(name, {"class": "p-3 card-columns", "style": "column-count: 2;"}, elements[0]);
+    createText("h3", localisationData["key-title-" + name][getSelectedLanguage()], {"class": "text-center"}, header);
+    addAttributesToElement(header, {"colspan": numColumns});
+
+    const body = document.getElementById("table-" + name + "-body");
+    if (!body) {
+        console.error("Body not found for table " + name);
+        return;
+    }
+
+    //createOrderedList(name, {"class": "p-3 card-columns", "style": "column-count: 2;"}, elements[0]);
+
+    const data = localisationData["key-list-" + name];
+    const rows = [];
+    for (let i = 0; i < data.length; i++) {
+        if (i % numColumns == 0) {
+            rows.push(finalizeElement(document.createElement("tr"), undefined, body));
+        }
+
+        const cell = document.createElement("td");
+        createText("span", (i+1) + ".", {"class": "m-2"}, cell);
+        createText("span", data[i][getSelectedLanguage()], undefined, cell);
+        createText("span", "", {"id": name + "-" + (i+1) + "-amount", "class": "text-amount float-end"}, cell);
+        finalizeElement(cell, {"id": name + "-" + (i+1)}, rows[rows.length-1]);
+    }
 }
 
 function getRandomNumberBetween(min, max) {
@@ -242,29 +263,41 @@ function getRandomElement(arr) {
 
 function rollIngredients(name) {
     const ingredients = [];
-    const numIngredients = getRandomNumberBetween(1, 5);
+    const numIngredients = getRandomNumberBetween(1, 5);  // [min, max[
     for (let i = 0; i < numIngredients; i++) {
-        const n = getRandomNumberBetween(1, 21);
-        ingredients.push([n, localisationData["key-list-" + name][n][getSelectedLanguage()]]);
+        const n = getRandomNumberBetween(1, 21);  // [min, max[
+        ingredients.push([n-1, localisationData["key-list-" + name][n-1][getSelectedLanguage()]]);
+        addClassToElement(document.getElementById(name + "-" + n), "table-active");
+
+        const amount = document.getElementById(name + "-" + n + "-amount");
+        if (!amount.innerHTML) {
+            amount.innerHTML = 0;
+        }
+        amount.innerHTML = +amount.innerHTML + 1;
     }
     return ingredients;
 }
 
 function roll() {
+    document.querySelectorAll(".table-active").forEach(e => {
+        removeClassFromElement(e, "table-active");
+        e.lastChild.innerHTML = "";
+    });
+
     const spirits = rollIngredients("spirits");
     const mixers = rollIngredients("mixers");
 
+    const generateLine = a => a.length + " (" + a.map(e => (e[0]+1)+":"+e[1]).join(", ") + ")"
     const lines = [
-        "#spirits: " + spirits.length + " (" + spirits.map(e => e[1]).join(", ") + ")",
-        "#mixers: " + mixers.length + " (" + mixers.map(e => e[1]).join(", ") + ")"
+        "#spirits: " + generateLine(spirits),
+        "#mixers: " + generateLine(mixers)
     ];
 
-    const output = document.getElementById("output");
-    output.innerHTML = lines.join("<br/>");
+    document.getElementById("output").innerHTML = lines.join("<br/>");
 }
 
 function initialize() {
-    createIngredientList("spirits");
-    //createIngredientList("flair");
-    createIngredientList("mixers");
+    createIngredientList("spirits", 2);
+    //createIngredientList("flair", 1);
+    createIngredientList("mixers", 2);
 }

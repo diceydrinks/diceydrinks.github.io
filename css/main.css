@@ -1,3 +1,11 @@
-.list-item {
-    margin-right: 1em;
+.container-row {
+    gap: 2em;
+}
+
+.button-roll {
+    width: 16%;
+}
+
+.text-amount {
+    width: 1em;
 }
