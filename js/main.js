@@ -167,7 +167,11 @@ const localisationData = {
         {
             "en": "Orange Juice"
         }
-    ]
+    ],
+    "key-button-clear": {
+        "en": "Clear",
+        "nl": "Wissen"
+    }
 }
 
 function getLocalisationData(...keys) {
@@ -212,6 +216,10 @@ function changeDisplayLanguage(value) {
 function getDisplayLanguage() {
     const lang = localStorage.getItem("preferred-language");
     return lang ? lang : "en";
+}
+
+function loadLocalisationStrings() {
+    document.querySelector(".button-clear").innerHTML = getLocalisationData("key-button-clear");
 }
 
 function addClassToElement(element, value) {
@@ -271,9 +279,9 @@ function createIngredientList(name, numColumns) {
         return;
     }
 
-    createText("h3", getLocalisationData("key-title-" + name), {"class": "text-center"}, header);
+    createText("h3", getLocalisationData("key-title-" + name), {"class": "text-center font-cursive"}, header);
     addAttributesToElement(header, {"colspan": numColumns});
-    header.addEventListener("click", () => roll(name));
+    header.addEventListener("click", () => rollTables(name));
 
     const body = document.getElementById("table-" + name + "-body");
     if (!body) {
@@ -323,21 +331,15 @@ function rollIngredients(name) {
 }
 
 function rollSingleTable(name) {
-    document.querySelectorAll("#table-" + name + "-body > tr > .table-active").forEach(e => {
-        removeClassFromElement(e, "table-active");
-        e.lastChild.innerHTML = "";
-    });
+    clearTables(name);
 
     const ingredients = rollIngredients(name);
     const generateLine = a => a.length + " (" + a.map(e => (e[0]+1) + ":" + e[1]).join(", ") + ")";
-    document.getElementById("output").innerHTML = "#" + name + ": " + generateLine(ingredients);
+    setOutput("#" + name + ": " + generateLine(ingredients));
 }
 
 function rollAllTables() {
-    document.querySelectorAll(".table-active").forEach(e => {
-        removeClassFromElement(e, "table-active");
-        e.lastChild.innerHTML = "";
-    });
+    clearTables();
 
     const spirits = rollIngredients("spirits");
     const mixers = rollIngredients("mixers");
@@ -348,10 +350,10 @@ function rollAllTables() {
         "#mixers: " + generateLine(mixers)
     ];
 
-    document.getElementById("output").innerHTML = lines.join("<br/>");
+    setOutput(lines);
 }
 
-function roll(name) {
+function rollTables(name) {
     if (!name) {
         rollAllTables();
     }
@@ -360,8 +362,29 @@ function roll(name) {
     }
 }
 
+function clearTables(name) {
+    const cls = "table-active";
+    const selector = name ? ("#table-" + name + "-body > tr > ." + cls) : ("." + cls);
+    document.querySelectorAll(selector).forEach(e => {
+        removeClassFromElement(e, cls);
+        e.lastChild.innerHTML = "";
+    });
+    setOutput();
+}
+
+function setOutput(text) {
+    if (Array.isArray(text)) {
+        text = text.join("<br/>");
+    }
+    if (!text) {
+        text = "";
+    }
+    document.getElementById("output").innerHTML = text;
+}
+
 function initialize() {
-    loadDisplayLanguage()
+    loadDisplayLanguage();
+    loadLocalisationStrings();
 
     createIngredientList("spirits", 2);
     //createIngredientList("flair", 1);

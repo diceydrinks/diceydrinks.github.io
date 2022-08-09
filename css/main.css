@@ -1,9 +1,22 @@
+@font-face {
+	font-family: GreatVibes-Regular;
+    src: url('GreatVibes-Regular.ttf');
+}
+
+.font-cursive {
+	font-family: GreatVibes-Regular;
+}
+.font-cursive-bold {
+	font-family: GreatVibes-Regular;
+    font-weight: bold;
+}
+
 .container-row {
     gap: 2em;
 }
 
-.button-roll {
-    width: 16%;
+.button-clear {
+    width: 12%;
 }
 
 .text-amount {
