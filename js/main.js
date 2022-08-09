@@ -1,4 +1,8 @@
 const localisationData = {
+    "key-display-languages": {
+        "en": "English",
+        "nl": "Nederlands"
+    },
     "key-title-spirits": {
         "en": "Spirits"
     },
@@ -166,8 +170,48 @@ const localisationData = {
     ]
 }
 
-function getSelectedLanguage() {
-    return "en";
+function getLocalisationData(...keys) {
+    let data = localisationData;
+    keys.forEach(k => {
+        data = data[k];
+    });
+    const lang = getDisplayLanguage();
+    return lang in data ? data[lang] : data["en"];
+}
+
+function loadDisplayLanguage() {
+    const items = document.querySelectorAll("#list-languages > li");
+    items.forEach(li => {
+        if (li.getAttribute("value") == getDisplayLanguage()) {
+            addClassToElement(li, "active");
+            document.getElementById("dropdown-languages").innerHTML = getLocalisationData("key-display-languages");
+        }
+        li.addEventListener('click', (e) => {
+            if (e.currentTarget.classList.contains("active")) {
+                return;
+            }
+            localStorage.setItem("preferred-language", e.currentTarget.getAttribute("value"));
+            location.reload();
+        });
+    });
+}
+
+function changeDisplayLanguage(value) {
+    localStorage.setItem("preferred-language", value);
+    const items = document.querySelectorAll("#collapse-languages > li");
+    items.forEach(li => {
+        if (li.getAttribute("value") == getDisplayLanguage()) {
+            addClassToElement(li, "active");
+        }
+        else {
+            removeClassFromElement(li, "active");
+        }
+    });
+}
+
+function getDisplayLanguage() {
+    const lang = localStorage.getItem("preferred-language");
+    return lang ? lang : "en";
 }
 
 function addClassToElement(element, value) {
@@ -227,7 +271,7 @@ function createIngredientList(name, numColumns) {
         return;
     }
 
-    createText("h3", localisationData["key-title-" + name][getSelectedLanguage()], {"class": "text-center"}, header);
+    createText("h3", getLocalisationData("key-title-" + name), {"class": "text-center"}, header);
     addAttributesToElement(header, {"colspan": numColumns});
 
     const body = document.getElementById("table-" + name + "-body");
@@ -238,16 +282,15 @@ function createIngredientList(name, numColumns) {
 
     //createOrderedList(name, {"class": "p-3 card-columns", "style": "column-count: 2;"}, elements[0]);
 
-    const data = localisationData["key-list-" + name];
     const rows = [];
-    for (let i = 0; i < data.length; i++) {
+    for (let i = 0; i < localisationData["key-list-" + name].length; i++) {
         if (i % numColumns == 0) {
             rows.push(finalizeElement(document.createElement("tr"), undefined, body));
         }
 
         const cell = document.createElement("td");
         createText("span", (i+1) + ".", {"class": "m-2"}, cell);
-        createText("span", data[i][getSelectedLanguage()], undefined, cell);
+        createText("span", getLocalisationData("key-list-" + name, i), undefined, cell);
         createText("span", "", {"id": name + "-" + (i+1) + "-amount", "class": "text-amount float-end"}, cell);
         finalizeElement(cell, {"id": name + "-" + (i+1)}, rows[rows.length-1]);
     }
@@ -266,7 +309,7 @@ function rollIngredients(name) {
     const numIngredients = getRandomNumberBetween(1, 5);  // [min, max[
     for (let i = 0; i < numIngredients; i++) {
         const n = getRandomNumberBetween(1, 21);  // [min, max[
-        ingredients.push([n-1, localisationData["key-list-" + name][n-1][getSelectedLanguage()]]);
+        ingredients.push([n-1, getLocalisationData("key-list-" + name, n-1)]);
         addClassToElement(document.getElementById(name + "-" + n), "table-active");
 
         const amount = document.getElementById(name + "-" + n + "-amount");
@@ -297,6 +340,8 @@ function roll() {
 }
 
 function initialize() {
+    loadDisplayLanguage()
+
     createIngredientList("spirits", 2);
     //createIngredientList("flair", 1);
     createIngredientList("mixers", 2);

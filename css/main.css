@@ -9,3 +9,12 @@
 .text-amount {
     width: 1em;
 }
+
+.display-languages {
+    position: absolute;
+    z-index: 1;
+}
+
+.li-lang:hover{
+    cursor:pointer;
+}
