@@ -15,6 +15,6 @@
     z-index: 1;
 }
 
-.li-lang:hover{
+.clickable:hover{
     cursor:pointer;
 }

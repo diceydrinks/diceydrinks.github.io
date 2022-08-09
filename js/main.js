@@ -186,7 +186,7 @@ function loadDisplayLanguage() {
             addClassToElement(li, "active");
             document.getElementById("dropdown-languages").innerHTML = getLocalisationData("key-display-languages");
         }
-        li.addEventListener('click', (e) => {
+        li.addEventListener("click", (e) => {
             if (e.currentTarget.classList.contains("active")) {
                 return;
             }
@@ -273,6 +273,7 @@ function createIngredientList(name, numColumns) {
 
     createText("h3", getLocalisationData("key-title-" + name), {"class": "text-center"}, header);
     addAttributesToElement(header, {"colspan": numColumns});
+    header.addEventListener("click", () => roll(name));
 
     const body = document.getElementById("table-" + name + "-body");
     if (!body) {
@@ -321,7 +322,18 @@ function rollIngredients(name) {
     return ingredients;
 }
 
-function roll() {
+function rollSingleTable(name) {
+    document.querySelectorAll("#table-" + name + "-body > tr > .table-active").forEach(e => {
+        removeClassFromElement(e, "table-active");
+        e.lastChild.innerHTML = "";
+    });
+
+    const ingredients = rollIngredients(name);
+    const generateLine = a => a.length + " (" + a.map(e => (e[0]+1) + ":" + e[1]).join(", ") + ")";
+    document.getElementById("output").innerHTML = "#" + name + ": " + generateLine(ingredients);
+}
+
+function rollAllTables() {
     document.querySelectorAll(".table-active").forEach(e => {
         removeClassFromElement(e, "table-active");
         e.lastChild.innerHTML = "";
@@ -330,13 +342,22 @@ function roll() {
     const spirits = rollIngredients("spirits");
     const mixers = rollIngredients("mixers");
 
-    const generateLine = a => a.length + " (" + a.map(e => (e[0]+1)+":"+e[1]).join(", ") + ")"
+    const generateLine = a => a.length + " (" + a.map(e => (e[0]+1) + ":" + e[1]).join(", ") + ")";
     const lines = [
         "#spirits: " + generateLine(spirits),
         "#mixers: " + generateLine(mixers)
     ];
 
     document.getElementById("output").innerHTML = lines.join("<br/>");
+}
+
+function roll(name) {
+    if (!name) {
+        rollAllTables();
+    }
+    else {
+        rollSingleTable(name);
+    }
 }
 
 function initialize() {
